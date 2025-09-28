@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Australia — Top Restaurant Cuisine by State</title>
+  <!-- Vega libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: system-ui, Segoe UI, Arial, sans-serif; margin: 24px; }
+    #vis { max-width: 960px; margin-inline: auto; }
+    .legend { max-width: 960px; margin: 12px auto 0; display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:#374151; }
+    .legend-item { display:flex; align-items:center; gap:6px; }
+    .legend-item img { width:22px; height:22px; border-radius:4px; display:block; }
+    .footer { max-width: 960px; margin: 10px auto; color:#6b7280; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;margin-top:0">Australia — Top Restaurant Cuisine by State</h2>
+  <div id="vis"></div>
+
+  <script>
+    // ---- Vega-Lite spec ----
+    const spec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "width": 900,
+      "height": 680,
+      "projection": {"type": "mercator"},
+      "layer": [
+        {
+          // 州界地图（确保 states.geojson 与本文件同目录）
+          "data": {"url": "states.geojson", "format": {"type": "geojson"}},
+          "mark": {"type": "geoshape", "fill": "#f6f6f6", "stroke": "#9aa0a6", "strokeWidth": 1}
+        },
+        {
+          // 你的汇总结果：各州最多餐厅种类 + 对应图标 + 放置坐标（使用州府坐标为基准）
+          "data": {
+            "values": [
+              {"state":"NSW","cuisine":"Thai","iconFile":"Thailand.png","lat":-33.8688,"lon":151.2093},   // Sydney
+              {"state":"NT","cuisine":"Chinese","iconFile":"China.png","lat":-12.4634,"lon":130.8456},    // Darwin
+              {"state":"QLD","cuisine":"Japanese","iconFile":"Japan.png","lat":-27.4698,"lon":153.0251},  // Brisbane
+              {"state":"SA","cuisine":"Korean","iconFile":"Korea.png","lat":-34.9285,"lon":138.6007},     // Adelaide
+              {"state":"TAS","cuisine":"Chinese","iconFile":"China.png","lat":-42.8821,"lon":147.3272},   // Hobart
+              {"state":"VIC","cuisine":"Chinese","iconFile":"China.png","lat":-37.8136,"lon":144.9631},   // Melbourne
+              {"state":"WA","cuisine":"Indian","iconFile":"India.png","lat":-31.9523,"lon":115.8613}      // Perth
+            ]
+          },
+          "transform": [
+            {"calculate": "'img/' + datum.iconFile", "as": "iconUrl"}
+          ],
+          "mark": {"type": "image", "width": 56, "height": 56},
+          "encoding": {
+            "longitude": {"field": "lon", "type": "quantitative"},
+            "latitude": {"field": "lat", "type": "quantitative"},
+            "url": {"field": "iconUrl"},
+            "tooltip": [
+              {"field":"state","title":"State"},
+              {"field":"cuisine","title":"Top cuisine"}
+            ]
+          }
+        },
+        {
+          // 州缩写标签（便于识别）
+          "data": {
+            "values": [
+              {"label":"WA","lat":-25.5,"lon":121.0},
+              {"label":"NT","lat":-19.0,"lon":133.0},
+              {"label":"SA","lat":-30.5,"lon":135.0},
+              {"label":"QLD","lat":-20.5,"lon":145.5},
+              {"label":"NSW","lat":-31.8,"lon":147.0},
+              {"label":"VIC","lat":-36.6,"lon":145.5},
+              {"label":"TAS","lat":-41.7,"lon":146.5}
+            ]
+          },
+          "mark": {"type":"text","fontSize":12,"fill":"#5f6368","fontWeight":"bold"},
+          "encoding": {
+            "longitude": {"field":"lon","type":"quantitative"},
+            "latitude": {"field":"lat","type":"quantitative"},
+            "text": {"field":"label"}
+          }
+        }
+      ]
+    };
+
+    vegaEmbed('#vis', spec, {actions:false});
+  </script>
+
+  <!-- 简洁图例（用你本地 PNG） -->
+  <div class="legend" aria-label="Legend">
+    <span style="font-weight:600;">Legend:</span>
+    <span class="legend-item"><img src="img/China.png" alt="Chinese icon"/> Chinese</span>
+    <span class="legend-item"><img src="img/Japan.png" alt="Japanese icon"/> Japanese</span>
+    <span class="legend-item"><img src="img/India.png" alt="Indian icon"/> Indian</span>
+    <span class="legend-item"><img src="img/Korea.png" alt="Korean icon"/> Korean</span>
+    <span class="legend-item"><img src="img/Thailand.png" alt="Thai icon"/> Thai</span>
+  </div>
+
+  <div class="footer">Visualisation by Yifei Wang • Built with Vega-Lite</div>
+</body>
+</html>
