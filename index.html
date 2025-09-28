@@ -21,7 +21,7 @@
   <h2>Australia — Top Restaurant Cuisine by State</h2>
   <div id="vis"></div>
 
-  <!-- 图例 -->
+  <!-- lable -->
   <div class="legend">
     <div class="legend-item"><img src="img/Thailand.png" class="legend-icon">Thai</div>
     <div class="legend-item"></div><img src="img/China.png" class="legend-icon">Chinese</div>
@@ -65,7 +65,7 @@
           "mark": {"type":"geoshape","stroke":"#374151","strokeWidth":1.2},
           "encoding": { "color": {"field": "color", "type": "nominal", "scale": null} }
         },
-        /* VIC、TAS 小图标 */
+        /* VIC、TAS*/
         {
           "data": {
             "values": [
@@ -80,7 +80,7 @@
             "tooltip": [{"field":"state"},{"field":"cuisine"}]
           }
         },
-        /* 其他州大图标（QLD/SA 微调） */
+        
         {
           "data": {
             "values": [
@@ -104,6 +104,7 @@
   </script>
 </body>
 </html>
+
 
 
 
