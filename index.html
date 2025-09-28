@@ -32,14 +32,17 @@
         {
           // 州界地图（确保 states.geojson 与本文件同目录）
           {
-         "data": {
-         "url": "states.geojson",
-         "format": { "type": "json", "property": "features" }
+  "data": {
+    "url": "states.geojson",
+    "format": { "type": "json", "property": "features" }
   },
-  "mark": { "type": "geoshape", "fill": "#e5e7eb", "stroke": "#374151", "strokeWidth": 1 }
+  "mark": {
+    "type": "geoshape",
+    "fill": "#e5e7eb",
+    "stroke": "#374151",
+    "strokeWidth": 1
+  }
 }
-        },
-        {
           // 你的汇总结果：各州最多餐厅种类 + 对应图标 + 放置坐标（使用州府坐标为基准）
           "data": {
             "values": [
@@ -105,5 +108,6 @@
   <div class="footer">Visualisation by Yifei Wang • Built with Vega-Lite</div>
 </body>
 </html>
+
 
 
