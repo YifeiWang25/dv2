@@ -3,15 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <title>Australia — Top Restaurant Cuisine by State</title>
-  <!-- Vega libraries -->
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <style>
-    :root { color-scheme: light; }
     body { font-family: system-ui, Segoe UI, Arial, sans-serif; margin: 24px; }
-    #vis { max-width: 960px; margin-inline: auto; }
-    h2 { text-align:center; margin: 0 0 12px 0; }
+    #vis { max-width: 960px; margin: 0 auto; }
+    h2 { text-align: center; margin: 0 0 12px 0; }
     .legend { max-width: 960px; margin: 12px auto 0; display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:#374151; }
     .legend-item { display:flex; align-items:center; gap:6px; }
     .legend-item img { width:22px; height:22px; border-radius:4px; display:block; }
@@ -30,30 +28,28 @@
       "projection": {"type": "mercator"},
       "layer": [
         {
-          /* 底图：GeoJSON（FeatureCollection），从 features 读取要素 */
           "data": {
-            "url": "states.geojson",
+            "url": "https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson",
             "format": { "type": "json", "property": "features" }
           },
           "mark": { "type":"geoshape", "fill":"#e5e7eb", "stroke":"#374151", "strokeWidth": 1.2 }
         },
         {
-          /* 图标：各州最多餐厅类别（使用你本地 PNG 图标） */
           "data": {
             "values": [
-              {"state":"NSW","cuisine":"Thai","iconFile":"Thailand.png","lat":-33.8688,"lon":151.2093},   // Sydney
-              {"state":"NT","cuisine":"Chinese","iconFile":"China.png","lat":-12.4634,"lon":130.8456},    // Darwin
-              {"state":"QLD","cuisine":"Japanese","iconFile":"Japan.png","lat":-27.4698,"lon":153.0251},  // Brisbane
-              {"state":"SA","cuisine":"Korean","iconFile":"Korea.png","lat":-34.9285,"lon":138.6007},     // Adelaide
-              {"state":"TAS","cuisine":"Chinese","iconFile":"China.png","lat":-42.8821,"lon":147.3272},   // Hobart
-              {"state":"VIC","cuisine":"Chinese","iconFile":"China.png","lat":-37.8136,"lon":144.9631},   // Melbourne
-              {"state":"WA","cuisine":"Indian","iconFile":"India.png","lat":-31.9523,"lon":115.8613}      // Perth
+              {"state":"NSW","cuisine":"Thai","iconFile":"Thailand.png","lat":-33.8688,"lon":151.2093},
+              {"state":"NT","cuisine":"Chinese","iconFile":"China.png","lat":-12.4634,"lon":130.8456},
+              {"state":"QLD","cuisine":"Japanese","iconFile":"Japan.png","lat":-27.4698,"lon":153.0251},
+              {"state":"SA","cuisine":"Korean","iconFile":"Korea.png","lat":-34.9285,"lon":138.6007},
+              {"state":"TAS","cuisine":"Chinese","iconFile":"China.png","lat":-42.8821,"lon":147.3272},
+              {"state":"VIC","cuisine":"Chinese","iconFile":"China.png","lat":-37.8136,"lon":144.9631},
+              {"state":"WA","cuisine":"Indian","iconFile":"India.png","lat":-31.9523,"lon":115.8613}
             ]
           },
           "transform": [
             {"calculate": "'img/' + datum.iconFile", "as": "iconUrl"}
           ],
-          "mark": { "type": "image", "width": 72, "height": 72 },  /* 图标更大 */
+          "mark": { "type": "image", "width": 72, "height": 72 },
           "encoding": {
             "longitude": {"field": "lon", "type": "quantitative"},
             "latitude": {"field": "lat", "type": "quantitative"},
@@ -65,7 +61,6 @@
           }
         },
         {
-          /* 州缩写标签：提高可读性 */
           "data": {
             "values": [
               {"label":"WA","lat":-25.5,"lon":121.0},
@@ -90,7 +85,6 @@
     vegaEmbed('#vis', spec, {actions:false});
   </script>
 
-  <!-- 图例（使用本地 PNG 图标） -->
   <div class="legend" aria-label="Legend">
     <span style="font-weight:600;">Legend:</span>
     <span class="legend-item"><img src="img/China.png" alt="Chinese"/> Chinese</span>
@@ -103,5 +97,3 @@
   <div class="footer">Visualisation by Yifei Wang • Built with Vega-Lite</div>
 </body>
 </html>
-
-
