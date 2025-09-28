@@ -1,71 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Australia — Top Cuisine by State (Pattern Fill)</title>
+  <meta charset="utf-8" />
+  <title>Australia — Top Restaurant Cuisine by State</title>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <style>
+    body { font-family: system-ui, Segoe UI, Arial, sans-serif; margin: 24px; }
+    #vis { max-width: 960px; margin: 0 auto; }
+    h2 { text-align: center; margin: 0 0 12px 0; }
+    .footer { max-width: 960px; margin: 12px auto 0; color:#6b7280; font-size: 13px; text-align:center; }
+  </style>
 </head>
 <body>
+  <h2>Australia — Top Restaurant Cuisine by State</h2>
   <div id="vis"></div>
 
   <script>
     const spec = {
-      "$schema": "https://vega.github.io/schema/vega/v5.json",
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
       "width": 920,
       "height": 700,
-      "projections": [
+      "projection": {"type": "mercator"},
+      "layer": [
         {
-          "name": "proj",
-          "type": "mercator",
-          "fit": {"signal": "data('states')"}
-        }
-      ],
-      "data": [
-        {
-          "name": "states",
-          "url": "states.geojson",
-          "format": {"type": "json", "property": "features"}
-        },
-        {
-          "name": "cuisine",
-          "values": [
-            {"state":"NSW","icon":"img/Thailand.png"},
-            {"state":"NT","icon":"img/China.png"},
-            {"state":"QLD","icon":"img/Japan.png"},
-            {"state":"SA","icon":"img/Korea.png"},
-            {"state":"TAS","icon":"img/China.png"},
-            {"state":"VIC","icon":"img/China.png"},
-            {"state":"WA","icon":"img/India.png"}
-          ]
-        }
-      ],
-      "marks": [
-        {
-          "type": "shape",
-          "from": {"data": "states"},
-          "encode": {
-            "enter": {
-              "stroke": {"value": "#374151"},
-              "strokeWidth": {"value": 1.2},
-              "tooltip": {"signal": "datum.properties.STATE_NAME"}
-            },
-            "update": {
-              "fill": {
-                "signal": "pattern('url(' + lookup('cuisine', datum.properties.STATE_NAME, 'state').icon + ')')"
-              }
-            }
+          "data": {
+            "url": "states.geojson",
+            "format": { "type": "json", "property": "features" }
           },
           "transform": [
-            {"type": "geoshape", "projection": "proj"}
-          ]
+            {
+              "lookup": "properties.STATE_NAME", 
+              "from": {
+                "data": {
+                  "values": [
+                    {"state":"NSW","color":"#22c55e"},    /* Thai - green */
+                    {"state":"NT","color":"#ef4444"},     /* Chinese - red */
+                    {"state":"QLD","color":"#ffffff"},    /* Japanese - white */
+                    {"state":"SA","color":"#3b82f6"},     /* Korean - blue */
+                    {"state":"TAS","color":"#ef4444"},    /* Chinese - red */
+                    {"state":"VIC","color":"#ef4444"},    /* Chinese - red */
+                    {"state":"WA","color":"#facc15"}      /* Indian - yellow */
+                  ]
+                },
+                "key": "state",
+                "fields": ["color"]
+              }
+            }
+          ],
+          "mark": {"type":"geoshape","stroke":"#374151","strokeWidth":1.2},
+          "encoding": {
+            "color": {"field": "color", "type": "nominal", "scale": null}
+          }
+        },
+        {
+          "data": {
+            "values": [
+              {"state":"NSW","cuisine":"Thai","iconFile":"Thailand.png","lat":-33.8688,"lon":151.2093},
+              {"state":"NT","cuisine":"Chinese","iconFile":"China.png","lat":-12.4634,"lon":130.8456},
+              {"state":"QLD","cuisine":"Japanese","iconFile":"Japan.png","lat":-27.4698,"lon":153.0251},
+              {"state":"SA","cuisine":"Korean","iconFile":"Korea.png","lat":-34.9285,"lon":138.6007},
+              {"state":"TAS","cuisine":"Chinese","iconFile":"China.png","lat":-42.8821,"lon":147.3272},
+              {"state":"VIC","cuisine":"Chinese","iconFile":"China.png","lat":-37.8136,"lon":144.9631},
+              {"state":"WA","cuisine":"Indian","iconFile":"India.png","lat":-31.9523,"lon":115.8613}
+            ]
+          },
+          "transform": [{"calculate": "'img/' + datum.iconFile", "as": "iconUrl"}],
+          "mark": {"type": "image", "width": 180, "height": 180},
+          "encoding": {
+            "longitude": {"field": "lon", "type": "quantitative"},
+            "latitude": {"field": "lat", "type": "quantitative"},
+            "url": {"field": "iconUrl"},
+            "tooltip": [{"field":"state"},{"field":"cuisine"}]
+          }
         }
       ]
     };
 
-    vegaEmbed("#vis", spec, {actions:false});
+    vegaEmbed('#vis', spec, {actions:false});
   </script>
+
+  <div class="footer">Visualisation by Yifei Wang • Built with Vega-Lite</div>
 </body>
 </html>
-
-
