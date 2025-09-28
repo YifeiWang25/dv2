@@ -11,39 +11,34 @@
     :root { color-scheme: light; }
     body { font-family: system-ui, Segoe UI, Arial, sans-serif; margin: 24px; }
     #vis { max-width: 960px; margin-inline: auto; }
+    h2 { text-align:center; margin: 0 0 12px 0; }
     .legend { max-width: 960px; margin: 12px auto 0; display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:#374151; }
     .legend-item { display:flex; align-items:center; gap:6px; }
     .legend-item img { width:22px; height:22px; border-radius:4px; display:block; }
-    .footer { max-width: 960px; margin: 10px auto; color:#6b7280; font-size: 13px; }
+    .footer { max-width: 960px; margin: 12px auto 0; color:#6b7280; font-size: 13px; text-align:center; }
   </style>
 </head>
 <body>
-  <h2 style="text-align:center;margin-top:0">Australia — Top Restaurant Cuisine by State</h2>
+  <h2>Australia — Top Restaurant Cuisine by State</h2>
   <div id="vis"></div>
 
   <script>
-    // ---- Vega-Lite spec ----
     const spec = {
       "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "width": 900,
-      "height": 680,
+      "width": 920,
+      "height": 700,
       "projection": {"type": "mercator"},
       "layer": [
         {
-          // 州界地图（确保 states.geojson 与本文件同目录）
-          {
-  "data": {
-    "url": "states.geojson",
-    "format": { "type": "json", "property": "features" }
-  },
-  "mark": {
-    "type": "geoshape",
-    "fill": "#e5e7eb",
-    "stroke": "#374151",
-    "strokeWidth": 1
-  }
-}
-          // 你的汇总结果：各州最多餐厅种类 + 对应图标 + 放置坐标（使用州府坐标为基准）
+          /* 底图：GeoJSON（FeatureCollection），从 features 读取要素 */
+          "data": {
+            "url": "states.geojson",
+            "format": { "type": "json", "property": "features" }
+          },
+          "mark": { "type":"geoshape", "fill":"#e5e7eb", "stroke":"#374151", "strokeWidth": 1.2 }
+        },
+        {
+          /* 图标：各州最多餐厅类别（使用你本地 PNG 图标） */
           "data": {
             "values": [
               {"state":"NSW","cuisine":"Thai","iconFile":"Thailand.png","lat":-33.8688,"lon":151.2093},   // Sydney
@@ -58,7 +53,7 @@
           "transform": [
             {"calculate": "'img/' + datum.iconFile", "as": "iconUrl"}
           ],
-          "mark": {"type": "image", "width": 56, "height": 56},
+          "mark": { "type": "image", "width": 72, "height": 72 },  /* 图标更大 */
           "encoding": {
             "longitude": {"field": "lon", "type": "quantitative"},
             "latitude": {"field": "lat", "type": "quantitative"},
@@ -70,7 +65,7 @@
           }
         },
         {
-          // 州缩写标签（便于识别）
+          /* 州缩写标签：提高可读性 */
           "data": {
             "values": [
               {"label":"WA","lat":-25.5,"lon":121.0},
@@ -82,7 +77,7 @@
               {"label":"TAS","lat":-41.7,"lon":146.5}
             ]
           },
-          "mark": {"type":"text","fontSize":12,"fill":"#5f6368","fontWeight":"bold"},
+          "mark": {"type":"text","fontSize":12,"fill":"#374151","fontWeight":"bold"},
           "encoding": {
             "longitude": {"field":"lon","type":"quantitative"},
             "latitude": {"field":"lat","type":"quantitative"},
@@ -95,19 +90,18 @@
     vegaEmbed('#vis', spec, {actions:false});
   </script>
 
-  <!-- 简洁图例（用你本地 PNG） -->
+  <!-- 图例（使用本地 PNG 图标） -->
   <div class="legend" aria-label="Legend">
     <span style="font-weight:600;">Legend:</span>
-    <span class="legend-item"><img src="img/China.png" alt="Chinese icon"/> Chinese</span>
-    <span class="legend-item"><img src="img/Japan.png" alt="Japanese icon"/> Japanese</span>
-    <span class="legend-item"><img src="img/India.png" alt="Indian icon"/> Indian</span>
-    <span class="legend-item"><img src="img/Korea.png" alt="Korean icon"/> Korean</span>
-    <span class="legend-item"><img src="img/Thailand.png" alt="Thai icon"/> Thai</span>
+    <span class="legend-item"><img src="img/China.png" alt="Chinese"/> Chinese</span>
+    <span class="legend-item"><img src="img/Japan.png" alt="Japanese"/> Japanese</span>
+    <span class="legend-item"><img src="img/India.png" alt="Indian"/> Indian</span>
+    <span class="legend-item"><img src="img/Korea.png" alt="Korean"/> Korean</span>
+    <span class="legend-item"><img src="img/Thailand.png" alt="Thai"/> Thai</span>
   </div>
 
   <div class="footer">Visualisation by Yifei Wang • Built with Vega-Lite</div>
 </body>
 </html>
-
 
 
