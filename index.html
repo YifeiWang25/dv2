@@ -1,112 +1,186 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Australia — Top Restaurant Cuisine by State</title>
+  <title>Australia — Map (Top Cuisine by State) + Top-5 Bar</title>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <style>
-    body { font-family: system-ui, Segoe UI, Arial, sans-serif; margin: 24px; text-align: center; }
-    #vis { display: inline-block; }
-    h2 { margin: 0 0 12px 0; }
-    .legend { margin-top: 20px; display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-    .color-box { width: 18px; height: 18px; border: 1px solid #374151; }
-    .legend-icon { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; }
-    .footer { margin-top: 12px; color:#6b7280; font-size: 13px; }
+    body{margin:16px;font-family:system-ui,Segoe UI,Arial,sans-serif;color:#111}
+    h2{margin:0 0 8px 0}
+    .layout{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;align-items:start}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+    .legend{margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:14px}
+    .legend-icon{width:28px;height:28px;object-fit:contain;border-radius:4px}
+    .footer{margin-top:10px;color:#6b7280;font-size:12px}
+    @media (max-width: 980px){.layout{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <h2>Most popular restaurants by state (based on search volume)</h2>
-  <div id="vis"></div>
+  <h2>Most Popular Cuisine by State + Top 5 Cuisines</h2>
+  <div class="layout">
+    <!-- LEFT: Responsive Vega MAP (icons scale with map size) -->
+    <div class="card">
+      <div id="map"></div>
+      <div class="legend">
+        <div class="legend-item"><img src="img/Thailand.png" class="legend-icon">Thai</div>
+        <div class="legend-item"><img src="img/China.png" class="legend-icon">Chinese</div>
+        <div class="legend-item"><img src="img/Japan.png" class="legend-icon">Japanese</div>
+        <div class="legend-item"><img src="img/Korea.png" class="legend-icon">Korean</div>
+        <div class="legend-item"><img src="img/India.png" class="legend-icon">Indian</div>
+      </div>
+      <div class="footer">Map: icons scale with panel width; legend size fixed.</div>
+    </div>
 
-  <!-- lable -->
-  <div class="legend">
-    <div class="legend-item"><img src="img/Thailand.png" class="legend-icon">Thai</div>
-    <div class="legend-item"></div><img src="img/China.png" class="legend-icon">Chinese</div>
-    <div class="legend-item"></div><img src="img/Japan.png" class="legend-icon">Japanese</div>
-    <div class="legend-item"></div><img src="img/Korea.png" class="legend-icon">Korean</div>
-    <div class="legend-item"></div><img src="img/India.png" class="legend-icon">Indian</div>
+    <!-- RIGHT: Vega-Lite BAR with dropdown -->
+    <div class="card">
+      <div id="bar"></div>
+    </div>
   </div>
 
-  <div class="footer">Visualisation by Yifei Wang • Built with Vega-Lite</div>
-
   <script>
-    const spec = {
-      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "width": 920,
-      "height": 700,
-      "autosize": {"type": "fit", "contains": "padding"},
-      "projection": {"type": "mercator"},
-      "layer": [
+    // --- Vega MAP (signal-driven icon scaling) ---
+    const mapSpec = {
+      $schema: 'https://vega.github.io/schema/vega/v5.json',
+      width: 640,
+      height: 560,
+      autosize: {type: 'fit', contains: 'padding', resize: true},
+      signals: [
+        {name: 'panelW', update: 'width'},
+        {name: 'iconScale', update: 'panelW / 920'} // relative to your original 920px base
+      ],
+      projections: [{name: 'proj', type: 'mercator'}],
+      data: [
         {
-          "data": { "url": "states.geojson", "format": { "type": "json", "property": "features" } },
-          "transform": [
+          name: 'states',
+          url: 'states.geojson',
+          format: {type: 'json', property: 'features'}
+        },
+        {
+          name: 'stateColors',
+          values: [
+            {state:'New South Wales', color:'#22c55e'},
+            {state:'Northern Territory', color:'#ef4444'},
+            {state:'Queensland', color:'#ffffff'},
+            {state:'South Australia', color:'#3b82f6'},
+            {state:'Tasmania', color:'#ef4444'},
+            {state:'Victoria', color:'#ef4444'},
+            {state:'Western Australia', color:'#facc15'}
+          ]
+        },
+        // Small icons (VIC, TAS)
+        { name: 'iconsSmall', values: [
+            {state:'Victoria', cuisine:'Chinese', iconFile:'China.png', lat:-36.5, lon:145.0, base:50},
+            {state:'Tasmania', cuisine:'Chinese', iconFile:'China.png', lat:-42.0, lon:146.5, base:50}
+          ]
+        },
+        // Large icons (others)
+        { name: 'iconsLarge', values: [
+            {state:'New South Wales', cuisine:'Thai', iconFile:'Thailand.png', lat:-32.0, lon:147.0, base:100},
+            {state:'Northern Territory', cuisine:'Chinese', iconFile:'China.png', lat:-19.0, lon:133.0, base:100},
+            {state:'Queensland', cuisine:'Japanese', iconFile:'Japan.png', lat:-20.8, lon:145.2, base:100},
+            {state:'South Australia', cuisine:'Korean', iconFile:'Korea.png', lat:-30.2, lon:135.0, base:100},
+            {state:'Western Australia', cuisine:'Indian', iconFile:'India.png', lat:-25.5, lon:121.0, base:100}
+          ]
+        }
+      ],
+      scales: [],
+      marks: [
+        {
+          type: 'shape',
+          from: {data: 'states'},
+          encode: {
+            update: {
+              stroke: {value: '#374151'}, strokeWidth: {value: 1.2},
+            }
+          },
+          transform: [
+            {type: 'geoshape', projection: 'proj'},
             {
-              "lookup": "properties.STATE_NAME",
-              "from": {
-                "data": {
-                  "values": [
-                    {"state":"New South Wales","color":"#22c55e"},
-                    {"state":"Northern Territory","color":"#ef4444"},
-                    {"state":"Queensland","color":"#ffffff"},
-                    {"state":"South Australia","color":"#3b82f6"},
-                    {"state":"Tasmania","color":"#ef4444"},
-                    {"state":"Victoria","color":"#ef4444"},
-                    {"state":"Western Australia","color":"#facc15"}
-                  ]
-                },
-                "key": "state",
-                "fields": ["color"]
-              }
+              type: 'lookup', from: 'stateColors', key: 'state', fields: ['datum.properties.STATE_NAME'],
+              values: ['color'], as: ['_color']
             }
           ],
-          "mark": {"type":"geoshape","stroke":"#374151","strokeWidth":1.2},
-          "encoding": { "color": {"field": "color", "type": "nominal", "scale": null} }
+          encode: {update: {fill: {signal: 'datum._color || "#e5e7eb"'}}}
         },
-        /* VIC、TAS*/
+        // Small icons layer
         {
-          "data": {
-            "values": [
-              {"state":"Victoria","cuisine":"Chinese","iconFile":"China.png","lat":-36.5,"lon":145.0},
-              {"state":"Tasmania","cuisine":"Chinese","iconFile":"China.png","lat":-42.0,"lon":146.5}
-            ]
+          type: 'image', from: {data: 'iconsSmall'},
+          encode: {
+            enter: {url: {signal: '"img/" + datum.iconFile'}},
+            update: {
+              width: {signal: 'datum.base * iconScale'},
+              height: {signal: 'datum.base * iconScale'},
+              tooltip: {signal: '{state: datum.state, cuisine: datum.cuisine}'}
+            }
           },
-          "transform": [{ "calculate": "'img/' + datum.iconFile", "as": "iconUrl" }],
-          "mark": { "type": "image", "width": 50, "height": 50 },
-          "encoding": {
-            "longitude": {"field": "lon"}, "latitude": {"field": "lat"}, "url": {"field": "iconUrl"},
-            "tooltip": [{"field":"state"},{"field":"cuisine"}]
-          }
+          transform: [
+            {type: 'geopoint', projection: 'proj', fields: ['lon','lat']},
+            {type: 'translate', dx: {signal: 'datum.x - (datum.base*iconScale)/2'}, dy: {signal: 'datum.y - (datum.base*iconScale)/2'} }
+          ]
         },
-        
+        // Large icons layer
         {
-          "data": {
-            "values": [
-              {"state":"New South Wales","cuisine":"Thai","iconFile":"Thailand.png","lat":-32.0,"lon":147.0},
-              {"state":"Northern Territory","cuisine":"Chinese","iconFile":"China.png","lat":-19.0,"lon":133.0},
-              {"state":"Queensland","cuisine":"Japanese","iconFile":"Japan.png","lat":-20.8,"lon":145.2}, /* 左下 */
-              {"state":"South Australia","cuisine":"Korean","iconFile":"Korea.png","lat":-30.2,"lon":135.0}, /* 上移 */
-              {"state":"Western Australia","cuisine":"Indian","iconFile":"India.png","lat":-25.5,"lon":121.0}
-            ]
+          type: 'image', from: {data: 'iconsLarge'},
+          encode: {
+            enter: {url: {signal: '"img/" + datum.iconFile'}},
+            update: {
+              width: {signal: 'datum.base * iconScale'},
+              height: {signal: 'datum.base * iconScale'},
+              tooltip: {signal: '{state: datum.state, cuisine: datum.cuisine}'}
+            }
           },
-          "transform": [{ "calculate": "'img/' + datum.iconFile", "as": "iconUrl" }],
-          "mark": { "type": "image", "width": 100, "height": 100 },
-          "encoding": {
-            "longitude": {"field": "lon"}, "latitude": {"field": "lat"}, "url": {"field": "iconUrl"},
-            "tooltip": [{"field":"state"},{"field":"cuisine"}]
-          }
+          transform: [
+            {type: 'geopoint', projection: 'proj', fields: ['lon','lat']},
+            {type: 'translate', dx: {signal: 'datum.x - (datum.base*iconScale)/2'}, dy: {signal: 'datum.y - (datum.base*iconScale)/2'} }
+          ]
         }
       ]
     };
-    vegaEmbed('#vis', spec, {actions:false});
+
+    // --- Vega-Lite BAR (dropdown: All States sums) ---
+    const barSpec = {
+      $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+      description: 'Top 5 cuisines for selected scope',
+      data: { url: 'state_cuisine_summary.v2.csv', format: {type:'csv'} },
+      params: [{
+        name: 'StateSelect',
+        bind: { input: 'select', options: [null,'NSW','VIC','QLD','SA','WA','TAS','ACT','NT'], labels: ['All States','NSW','VIC','QLD','SA','WA','TAS','ACT','NT'], name: 'Select State: ' }
+      }],
+      transform: [
+        { aggregate: [{op:'sum', field:'count', as:'count'}], groupby: ['state','cuisine_norm'] },
+        { calculate: "(isValid(StateSelect) && StateSelect != null) ? 'state' : 'all'", as: 'mode' },
+        { calculate: "datum.mode == 'state' ? datum.state : 'All'", as: 'grp' },
+        { aggregate: [{op:'sum', field:'count', as:'count'}], groupby: ['grp','cuisine_norm'] },
+        { filter: "datum.grp == ((isValid(StateSelect) && StateSelect != null) ? StateSelect : 'All')" },
+        { window: [{op:'rank', as:'rank'}], sort: [{field:'count', order:'descending'}], groupby: ['grp'] },
+        { filter: 'datum.rank <= 5' }
+      ],
+      layer: [
+        { mark: {type:'bar'},
+          encoding: {
+            x: {field:'cuisine_norm', type:'nominal', title:'Cuisine', sort:'-y'},
+            y: {field:'count', type:'quantitative', title:'Number of Restaurants'},
+            color: {field:'cuisine_norm', type:'nominal', legend: null},
+            tooltip: [ {field:'grp', title:'Scope'}, {field:'cuisine_norm', title:'Cuisine'}, {field:'count', title:'Count'} ]
+          }
+        },
+        { mark: {type:'text', dy:-3},
+          encoding: {
+            x: {field:'cuisine_norm', type:'nominal', sort:'-y'},
+            y: {field:'count', type:'quantitative'},
+            text: {field:'count', type:'quantitative', format:',d'},
+            color: {value:'black'}
+          }
+        }
+      ],
+      config: { view:{stroke:'transparent'}, axis:{labelFontSize:12, titleFontSize:14} }
+    };
+
+    vegaEmbed('#map', mapSpec, {actions:false});
+    vegaEmbed('#bar', barSpec, {actions:false});
   </script>
 </body>
 </html>
-
-
-
-
-
-
