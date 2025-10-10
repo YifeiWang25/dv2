@@ -41,9 +41,10 @@
   </div>
 
   <script>
-    // ---------- MAP (Vega-Lite; mirrors your working standalone map) ----------
+    // ---------- MAP (Vega-Lite; stable render) ----------
     const mapSpec = {
       $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+      title: 'Most popular restaurants by state (based on search volume)',
       width: 920,
       height: 700,
       autosize: {type:'fit', contains:'padding'},
@@ -99,9 +100,10 @@
       ]
     };
 
-    // ---------- BAR (colors unified with the map) ----------
+    // ---------- BAR (unified palette + fallback colors) ----------
     const barSpec = {
       $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+      title: 'Number of restaurants in each state (Top 5 cuisines)',
       description: 'Top 5 cuisines for selected scope',
       data: { url: 'state_cuisine_summary.v2.csv', format: {type:'csv'} },
       params: [{
@@ -118,15 +120,26 @@
         { filter: 'datum.rank <= 5' }
       ],
       layer: [
-        { mark: {type:'bar', strokeWidth:{expr:"datum.cuisine_norm==='japanese'?1:0"}, stroke:{expr:"datum.cuisine_norm==='japanese'?'#111827':null"}},
+        { mark: {type:'bar'},
           encoding: {
             x: {field:'cuisine_norm', type:'nominal', title:'Cuisine', sort:'-y'},
             y: {field:'count', type:'quantitative', title:'Number of Restaurants'},
+            // Fixed brand colors for 6 cuisines, fallback to a palette for others
             color: {
+              condition: [
+                { test: "datum.cuisine_norm === 'chinese'",  value: '#ef4444' },
+                { test: "datum.cuisine_norm === 'japanese'", value: '#ffffff' },
+                { test: "datum.cuisine_norm === 'thai'",     value: '#22c55e' },
+                { test: "datum.cuisine_norm === 'indian'",   value: '#facc15' },
+                { test: "datum.cuisine_norm === 'korean'",   value: '#3b82f6' },
+                { test: "datum.cuisine_norm === 'italian'",  value: '#8b5cf6' }
+              ],
               field:'cuisine_norm', type:'nominal', legend:null,
-              scale:{domain:['chinese','japanese','thai','indian','korean','italian'],
-                     range: ['#ef4444','#ffffff','#22c55e','#facc15','#3b82f6','#8b5cf6']}
+              // fallback for any other categories
+              scale: { scheme: 'category20' }
             },
+            // Dark stroke only for white (Japanese) bars so they don't disappear
+            stroke: { condition: { test: "datum.cuisine_norm === 'japanese'", value: '#111827' }, value: null },
             tooltip: [ {field:'grp', title:'Scope'}, {field:'cuisine_norm', title:'Cuisine'}, {field:'count', title:'Count'} ]
           }
         },
