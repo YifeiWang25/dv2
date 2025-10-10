@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Australia — Map (Top Cuisine by State) + Top-5 Bar</title>
+  <title>Data visualization of Australian restaurant cuisines</title>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
@@ -19,7 +19,7 @@
   </style>
 </head>
 <body>
-  <h2>Most Popular Cuisine by State + Top 5 Cuisines</h2>
+  <h2>Data visualization of Australian restaurant cuisines</h2>
   <div class="layout">
     <!-- LEFT: Responsive Vega MAP (icons scale with map size) -->
     <div class="card">
@@ -31,7 +31,7 @@
         <div class="legend-item"><img src="img/Korea.png" class="legend-icon">Korean</div>
         <div class="legend-item"><img src="img/India.png" class="legend-icon">Indian</div>
       </div>
-      <div class="footer">Map: icons scale with panel width; legend size fixed.</div>
+      
     </div>
 
     <!-- RIGHT: Vega-Lite BAR with dropdown -->
@@ -41,101 +41,68 @@
   </div>
 
   <script>
-    // --- Vega MAP (signal-driven icon scaling) ---
+    // --- Vega MAP (signal-driven icon scaling, no invalid transforms) ---
     const mapSpec = {
       $schema: 'https://vega.github.io/schema/vega/v5.json',
       width: 640,
       height: 560,
-      autosize: {type: 'fit', contains: 'padding', resize: true},
+      autosize: { type: 'fit', contains: 'padding', resize: true },
       signals: [
-        {name: 'panelW', update: 'width'},
-        {name: 'iconScale', update: 'panelW / 920'} // relative to your original 920px base
+        { name: 'panelW', update: 'width' },
+        { name: 'iconScale', update: 'panelW / 920' } // relative to original 920px design
       ],
-      projections: [{name: 'proj', type: 'mercator'}],
+      projections: [ { name: 'proj', type: 'mercator', fit: { data: 'states' } } ],
       data: [
-        {
-          name: 'states',
-          url: 'states.geojson',
-          format: {type: 'json', property: 'features'}
-        },
-        {
-          name: 'stateColors',
-          values: [
-            {state:'New South Wales', color:'#22c55e'},
-            {state:'Northern Territory', color:'#ef4444'},
-            {state:'Queensland', color:'#ffffff'},
-            {state:'South Australia', color:'#3b82f6'},
-            {state:'Tasmania', color:'#ef4444'},
-            {state:'Victoria', color:'#ef4444'},
-            {state:'Western Australia', color:'#facc15'}
-          ]
-        },
+        { name: 'states', url: 'states.geojson', format: { type: 'json', property: 'features' } },
         // Small icons (VIC, TAS)
         { name: 'iconsSmall', values: [
             {state:'Victoria', cuisine:'Chinese', iconFile:'China.png', lat:-36.5, lon:145.0, base:50},
             {state:'Tasmania', cuisine:'Chinese', iconFile:'China.png', lat:-42.0, lon:146.5, base:50}
-          ]
-        },
+          ] },
         // Large icons (others)
         { name: 'iconsLarge', values: [
-            {state:'New South Wales', cuisine:'Thai', iconFile:'Thailand.png', lat:-32.0, lon:147.0, base:100},
+            {state:'New South Wales', cuisine:'Thai', iconFile:'Thailand.png',   lat:-32.0, lon:147.0, base:100},
             {state:'Northern Territory', cuisine:'Chinese', iconFile:'China.png', lat:-19.0, lon:133.0, base:100},
-            {state:'Queensland', cuisine:'Japanese', iconFile:'Japan.png', lat:-20.8, lon:145.2, base:100},
-            {state:'South Australia', cuisine:'Korean', iconFile:'Korea.png', lat:-30.2, lon:135.0, base:100},
-            {state:'Western Australia', cuisine:'Indian', iconFile:'India.png', lat:-25.5, lon:121.0, base:100}
-          ]
-        }
+            {state:'Queensland', cuisine:'Japanese', iconFile:'Japan.png',       lat:-20.8, lon:145.2, base:100},
+            {state:'South Australia', cuisine:'Korean', iconFile:'Korea.png',    lat:-30.2, lon:135.0, base:100},
+            {state:'Western Australia', cuisine:'Indian', iconFile:'India.png',  lat:-25.5, lon:121.0, base:100}
+          ] }
       ],
-      scales: [],
       marks: [
         {
-          type: 'shape',
-          from: {data: 'states'},
-          encode: {
-            update: {
-              stroke: {value: '#374151'}, strokeWidth: {value: 1.2},
-            }
-          },
-          transform: [
-            {type: 'geoshape', projection: 'proj'},
-            {
-              type: 'lookup', from: 'stateColors', key: 'state', fields: ['datum.properties.STATE_NAME'],
-              values: ['color'], as: ['_color']
-            }
-          ],
-          encode: {update: {fill: {signal: 'datum._color || "#e5e7eb"'}}}
+          type: 'shape', from: { data: 'states' },
+          transform: [ { type: 'geoshape', projection: 'proj' } ],
+          encode: { update: { fill: {value: '#e5e7eb'}, stroke: {value:'#374151'}, strokeWidth:{value:1.2} } }
         },
-        // Small icons layer
+        // Small icons layer — use x/y from geopoint and offset by half size in encode, not a transform
         {
-          type: 'image', from: {data: 'iconsSmall'},
+          type: 'image', from: { data: 'iconsSmall' },
+          transform: [ { type: 'geopoint', projection: 'proj', fields: ['lon','lat'], as: ['x','y'] } ],
           encode: {
-            enter: {url: {signal: '"img/" + datum.iconFile'}},
+            enter: { url: { signal: '"img/" + datum.iconFile' } },
             update: {
-              width: {signal: 'datum.base * iconScale'},
-              height: {signal: 'datum.base * iconScale'},
-              tooltip: {signal: '{state: datum.state, cuisine: datum.cuisine}'}
+              x: { signal: 'datum.x - (datum.base * iconScale) / 2' },
+              y: { signal: 'datum.y - (datum.base * iconScale) / 2' },
+              width:  { signal: 'datum.base * iconScale' },
+              height: { signal: 'datum.base * iconScale' },
+              tooltip: { signal: '{state: datum.state, cuisine: datum.cuisine}' }
             }
-          },
-          transform: [
-            {type: 'geopoint', projection: 'proj', fields: ['lon','lat']},
-            {type: 'translate', dx: {signal: 'datum.x - (datum.base*iconScale)/2'}, dy: {signal: 'datum.y - (datum.base*iconScale)/2'} }
-          ]
+          }
         },
         // Large icons layer
         {
-          type: 'image', from: {data: 'iconsLarge'},
+          type: 'image', from: { data: 'iconsLarge' },
+          transform: [ { type: 'geopoint', projection: 'proj', fields: ['lon','lat'], as: ['x','y'] } ],
           encode: {
-            enter: {url: {signal: '"img/" + datum.iconFile'}},
+            enter: { url: { signal: '"img/" + datum.iconFile' } },
             update: {
-              width: {signal: 'datum.base * iconScale'},
-              height: {signal: 'datum.base * iconScale'},
-              tooltip: {signal: '{state: datum.state, cuisine: datum.cuisine}'}
+              x: { signal: 'datum.x - (datum.base * iconScale) / 2' },
+              y: { signal: 'datum.y - (datum.base * iconScale) / 2' },
+              width:  { signal: 'datum.base * iconScale' },
+              height: { signal: 'datum.base * iconScale' },
+              tooltip: { signal: '{state: datum.state, cuisine: datum.cuisine}' }
             }
-          },
-          transform: [
-            {type: 'geopoint', projection: 'proj', fields: ['lon','lat']},
-            {type: 'translate', dx: {signal: 'datum.x - (datum.base*iconScale)/2'}, dy: {signal: 'datum.y - (datum.base*iconScale)/2'} }
-          ]
+          }
         }
       ]
     };
