@@ -10,9 +10,6 @@
     body{margin:16px;font-family:system-ui,Segoe UI,Arial,sans-serif;color:#111}
     h2{margin:0 0 8px 0}
     .layout{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;align-items:start}
-    .layout > .card:last-child {
-    grid-column: 2;
-  }
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
     .legend{margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
     .legend-item{display:flex;align-items:center;gap:6px;font-size:14px}
@@ -40,15 +37,13 @@
     <!-- RIGHT: Vega-Lite BAR with dropdown -->
     <div class="card">
       <div id="bar"></div>
-    </div>
-    <!-- RIGHT-LOWER: Project background -->
-    <div class="card" style="align-self:end;">
-      <h3>Project background</h3>
-      <p style="font-size:14px; line-height:1.55; color:#1f2937; white-space:pre-line;">
-        Australia is a multicultural nation of immigrants, with a culinary style that blends culinary traditions from around the world.
-        This project aims to visually showcase the differences in culinary preferences between states, aiming to provide a quick and engaging overview
-        for the average Australian reader – whether you’re deciding where to eat, exploring cultural diversity, or simply curious about local flavors.
-      </p>
+      <div style="margin-top:12px;">
+    <h3 style="font-size:16px;margin-bottom:4px;">Project background</h3>
+    <p style="font-size:14px;line-height:1.55;color:#1f2937;white-space:pre-line;">
+      Australia is a multicultural nation of immigrants, with a culinary style that blends culinary traditions from around the world.
+      This project aims to visually showcase the differences in culinary preferences between states, aiming to provide a quick and engaging overview
+      for the average Australian reader – whether you’re deciding where to eat, exploring cultural diversity, or simply curious about local flavors.
+    </p>
     </div>
   </div>
 
@@ -179,5 +174,6 @@
   </div>
 </body>
 </html>
+
 
 
