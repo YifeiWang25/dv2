@@ -7,24 +7,21 @@
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <style>
-    body{margin:16px;font-family:system-ui,Segoe UI,Arial,sans-serif;color:#111;background:#fff}
+    body{margin:16px;font-family:system-ui,Segoe UI,Arial,sans-serif;color:#111}
     h2{margin:0 0 8px 0}
-    h3{margin:0 0 8px 0;font-size:18px}
     .layout{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;align-items:start}
-    .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);background:#fff}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
     .legend{margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
     .legend-item{display:flex;align-items:center;gap:6px;font-size:14px}
     .legend-icon{width:28px;height:28px;object-fit:contain;border-radius:4px}
-    .small{font-size:14px;line-height:1.55;color:#1f2937}
-    .footer{margin-top:16px;color:#6b7280;font-size:12px;text-align:center}
+    .footer{margin-top:10px;color:#6b7280;font-size:12px}
     @media (max-width: 980px){.layout{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <h2>Data visualization of Australian restaurant cuisines</h2>
-
   <div class="layout">
-    <!-- LEFT: Map card -->
+    <!-- LEFT: Responsive Vega MAP (icons scale with map size) -->
     <div class="card">
       <div id="map"></div>
       <div class="legend">
@@ -34,17 +31,17 @@
         <div class="legend-item"><img src="img/Korea.png" class="legend-icon">Korean</div>
         <div class="legend-item"><img src="img/India.png" class="legend-icon">Indian</div>
       </div>
+      
     </div>
 
-    <!-- RIGHT-UPPER: Bar chart -->
+    <!-- RIGHT: Vega-Lite BAR with dropdown -->
     <div class="card">
       <div id="bar"></div>
     </div>
-
-    <!-- RIGHT-LOWER: Background text -->
+    <!-- RIGHT-LOWER: Project background -->
     <div class="card">
       <h3>Project background</h3>
-      <p class="small">
+      <p style="font-size:14px; line-height:1.55; color:#1f2937; white-space:pre-line;">
         Australia is a multicultural nation of immigrants, with a culinary style that blends culinary traditions from around the world.
         This project aims to visually showcase the differences in culinary preferences between states, aiming to provide a quick and engaging overview
         for the average Australian reader – whether you’re deciding where to eat, exploring cultural diversity, or simply curious about local flavors.
@@ -52,22 +49,17 @@
     </div>
   </div>
 
-  <!-- centered grey signature -->
-  <div class="footer">
-    由 Yifei Wang 制作｜日期：2025年10月14日｜数据来源：
-    <a href="https://overpass-turbo.eu/" target="_blank" rel="noopener">overpass-turbo.eu</a>、
-    <a href="https://trends.google.com/trends/" target="_blank" rel="noopener">trends.google.com</a>
-  </div>
-
   <script>
-    // ===== MAP (same spec as你之前的工作版本) =====
+    // ---------- MAP (Vega-Lite; stable render) ----------
     const mapSpec = {
       $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
       title: 'Most popular restaurants by state (based on search volume)',
-      width: 920, height: 700,
+      width: 920,
+      height: 700,
       autosize: {type:'fit', contains:'padding'},
       projection: {type:'mercator'},
       layer: [
+        // States with fills mapped to top cuisine colors
         {
           data: { url: 'states.geojson', format: { type: 'json', property: 'features' } },
           transform: [{
@@ -85,6 +77,7 @@
           mark: { type: 'geoshape', stroke:'#374151', strokeWidth:1.2 },
           encoding: { color: { field:'fill', type:'nominal', scale: null } }
         },
+        // Small icons (VIC, TAS)
         {
           data: { values: [
             {state:'Victoria', cuisine:'Chinese',  iconFile:'China.png',   lat:-36.5, lon:145.0},
@@ -97,9 +90,89 @@
             tooltip: [{field:'state'}, {field:'cuisine'}]
           }
         },
+        // Large icons (others)
         {
           data: { values: [
             {state:'New South Wales',   cuisine:'Thai',     iconFile:'Thailand.png', lat:-32.0, lon:147.0},
-            {state:'Northern Territory',cuisine:'Chinese',  icon
+            {state:'Northern Territory',cuisine:'Chinese',  iconFile:'China.png',    lat:-19.0, lon:133.0},
+            {state:'Queensland',        cuisine:'Japanese', iconFile:'Japan.png',    lat:-20.8, lon:145.2},
+            {state:'South Australia',   cuisine:'Korean',   iconFile:'Korea.png',    lat:-30.2, lon:135.0},
+            {state:'Western Australia', cuisine:'Indian',   iconFile:'India.png',    lat:-25.5, lon:121.0}
+          ]},
+          transform: [{ calculate: "'img/' + datum.iconFile", as: 'iconUrl' }],
+          mark: { type:'image', width:100, height:100 },
+          encoding: {
+            longitude: { field:'lon' }, latitude: { field:'lat' }, url: { field:'iconUrl' },
+            tooltip: [{field:'state'}, {field:'cuisine'}]
+          }
+        }
+      ]
+    };
 
+    // ---------- BAR (unified palette + fallback colors) ----------
+    const barSpec = {
+      $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+      title: 'Number of restaurants in each state (Top 5 cuisines)',
+      description: 'Top 5 cuisines for selected scope',
+      data: { url: 'state_cuisine_summary.v2.csv', format: {type:'csv'} },
+      params: [{
+        name: 'StateSelect',
+        bind: { input: 'select', options: [null,'NSW','VIC','QLD','SA','WA','TAS','ACT','NT'], labels: ['All States','NSW','VIC','QLD','SA','WA','TAS','ACT','NT'], name: 'Select State: ' }
+      }],
+      transform: [
+        { aggregate: [{op:'sum', field:'count', as:'count'}], groupby: ['state','cuisine_norm'] },
+        { calculate: "(isValid(StateSelect) && StateSelect != null) ? 'state' : 'all'", as: 'mode' },
+        { calculate: "datum.mode == 'state' ? datum.state : 'All'", as: 'grp' },
+        { aggregate: [{op:'sum', field:'count', as:'count'}], groupby: ['grp','cuisine_norm'] },
+        { filter: "datum.grp == ((isValid(StateSelect) && StateSelect != null) ? StateSelect : 'All')" },
+        { window: [{op:'rank', as:'rank'}], sort: [{field:'count', order:'descending'}], groupby: ['grp'] },
+        { filter: 'datum.rank <= 5' }
+      ],
+      layer: [
+        { mark: {type:'bar'},
+          encoding: {
+            x: {field:'cuisine_norm', type:'nominal', title:'Cuisine', sort:'-y'},
+            y: {field:'count', type:'quantitative', title:'Number of Restaurants'},
+            // Fixed brand colors for 6 cuisines, fallback to a palette for others
+            color: {
+              condition: [
+                { test: "datum.cuisine_norm === 'chinese'",  value: '#ef4444' },
+                { test: "datum.cuisine_norm === 'japanese'", value: '#ffffff' },
+                { test: "datum.cuisine_norm === 'thai'",     value: '#22c55e' },
+                { test: "datum.cuisine_norm === 'indian'",   value: '#facc15' },
+                { test: "datum.cuisine_norm === 'korean'",   value: '#3b82f6' },
+                { test: "datum.cuisine_norm === 'italian'",  value: '#8b5cf6' }
+              ],
+              field:'cuisine_norm', type:'nominal', legend:null,
+              // fallback for any other categories
+              scale: { scheme: 'category20' }
+            },
+            // Dark stroke only for white (Japanese) bars so they don't disappear
+            stroke: { condition: { test: "datum.cuisine_norm === 'japanese'", value: '#111827' }, value: null },
+            tooltip: [ {field:'grp', title:'Scope'}, {field:'cuisine_norm', title:'Cuisine'}, {field:'count', title:'Count'} ]
+          }
+        },
+        { mark: {type:'text', dy:-3},
+          encoding: {
+            x: {field:'cuisine_norm', type:'nominal', sort:'-y'},
+            y: {field:'count', type:'quantitative'},
+            text: {field:'count', type:'quantitative', format:',d'},
+            color: {value:'#111827'}
+          }
+        }
+      ],
+      config: { view:{stroke:'transparent'}, axis:{labelFontSize:12, titleFontSize:14} }
+    };
 
+    vegaEmbed('#map', mapSpec, {actions:false});
+    vegaEmbed('#bar', barSpec, {actions:false});
+  </script>
+  <div style="text-align:center; color:#6b7280; font-size:12px; margin-top:20px;">
+    Visualisation by Yifei Wang<br>
+    October 14, 2025<br>
+    Data sources<br>
+    <a href="https://overpass-turbo.eu/" target="_blank" rel="noopener noreferrer">overpass-turbo.eu</a>&nbsp;&nbsp;
+    <a href="https://trends.google.com/trends/" target="_blank" rel="noopener noreferrer">trends.google.com</a>
+  </div>
+</body>
+</html>
