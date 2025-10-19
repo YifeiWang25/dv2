@@ -148,14 +148,14 @@
             tooltip: [ {field:'grp', title:'Scope'}, {field:'cuisine_norm', title:'Cuisine'}, {field:'count', title:'Count'} ]
           }
         },
-        { mark: {type:'text', dy:-3},
-          encoding: {
-            x: {field:'cuisine_norm', type:'nominal', sort:'-y'},
-            y: {field:'count', type:'quantitative'},
-            text: {field:'count', type:'quantitative', format:',d'},
-            color: {value:'#111827'}
-          }
-        }
+        //{ mark: {type:'text', dy:-3},
+         //encoding: {
+           // x: {field:'cuisine_norm', type:'nominal', sort:'-y'},
+           // y: {field:'count', type:'quantitative'},
+          //  text: {field:'count', type:'quantitative', format:',d'},
+           // color: {value:'#111827'}
+         // }
+       // }
       ],
       config: { view:{stroke:'transparent'}, axis:{labelFontSize:12, titleFontSize:14} }
     };
@@ -172,6 +172,7 @@
   </div>
 </body>
 </html>
+
 
 
 
